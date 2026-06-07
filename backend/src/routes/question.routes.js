@@ -1,6 +1,7 @@
-const router = require('express').Router();
+﻿const router = require('express').Router();
 const auth = require('../middleware/auth');
-const { validate, required, isString, minLen, maxLen, isIn, isArray } = require('../middleware/validate');
+const { validate } = require('../middleware/validate');
+const { z } = require('zod');
 const questionController = require('../controllers/question.controller');
 
 // 所有路由都需要登录
@@ -15,11 +16,11 @@ router.get('/', questionController.list);
 router.post(
   '/',
   validate({
-    title: [required, isString, minLen(1), maxLen(200)],
-    content: [isString, maxLen(50000)],
-    difficulty: [isIn(['easy', 'medium', 'hard'])],
-    source: [isString, maxLen(100)],
-    tagIds: [isArray],
+    title: z.string().min(1).max(200),
+    content: z.string().max(50000).optional().default(''),
+    difficulty: z.enum(['easy', 'medium', 'hard']).optional().default('medium'),
+    source: z.string().max(100).optional().default(''),
+    tagIds: z.array(z.number()).optional().default([]),
   }),
   questionController.create
 );
@@ -31,11 +32,11 @@ router.get('/:id', questionController.detail);
 router.put(
   '/:id',
   validate({
-    title: [required, isString, minLen(1), maxLen(200)],
-    content: [isString, maxLen(50000)],
-    difficulty: [isIn(['easy', 'medium', 'hard'])],
-    source: [isString, maxLen(100)],
-    tagIds: [isArray],
+    title: z.string().min(1).max(200),
+    content: z.string().max(50000).optional().default(''),
+    difficulty: z.enum(['easy', 'medium', 'hard']).optional().default('medium'),
+    source: z.string().max(100).optional().default(''),
+    tagIds: z.array(z.number()).optional().default([]),
   }),
   questionController.update
 );

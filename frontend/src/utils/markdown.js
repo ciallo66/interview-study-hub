@@ -1,38 +1,29 @@
+﻿/**
+ * Markdown → HTML（使用 marked + DOMPurify）
+ * 支持 GFM 标准语法 + XSS 防护
+ */
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
+
+// 配置 marked 选项
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+});
+
 /**
- * 简易 Markdown → HTML
- * 支持：h2/h3/h4、粗体、斜体、行内代码、代码块、无序列表、段落
+ * 将 Markdown 文本转为安全的 HTML
+ * @param {string} md - Markdown 原始文本
+ * @returns {string} 安全的 HTML 字符串
  */
 export function markdownToHtml(md) {
   if (!md) return '';
 
-  // 1. 转义 HTML 实体
-  let html = md
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  // 1. marked 解析 Markdown → HTML
+  const rawHtml = marked.parse(md);
 
-  // 2. 代码块 ```\n...\n```
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+  // 2. DOMPurify 过滤 XSS
+  const cleanHtml = DOMPurify.sanitize(rawHtml);
 
-  // 3. 行内代码 `...`
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-  // 4. 标题 ### / ## / #
-  html = html.replace(/^### (.+)$/gm, '<h4>$1</h4>');
-  html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
-  html = html.replace(/^# (.+)$/gm, '<h2>$1</h2>');
-
-  // 5. 粗体 **text** / 斜体 *text*
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-
-  // 6. 无序列表 - item
-  html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*?<\/li>)/s, '<ul>$1</ul>');
-
-  // 7. 段落
-  html = html.replace(/\n\n/g, '</p><p>');
-  html = html.replace(/\n/g, '<br>');
-
-  return '<p>' + html + '</p>';
+  return cleanHtml;
 }

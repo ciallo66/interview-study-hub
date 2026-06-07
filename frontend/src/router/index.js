@@ -104,11 +104,11 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token');
 
   if (to.meta.requiresAuth && !token) {
-    next('/login');
+    next('/login');                // 未登录 → 跳登录
   } else if (to.meta.guest && token) {
-    next('/questions');
+    next('/questions');            // 已登录 → 从登录/注册页跳到主界面
   } else {
-    next();
+    next();                        // 正常放行
   }
 });
 

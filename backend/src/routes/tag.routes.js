@@ -1,6 +1,7 @@
-const router = require('express').Router();
+﻿const router = require('express').Router();
 const auth = require('../middleware/auth');
-const { validate, required, isString, minLen, maxLen } = require('../middleware/validate');
+const { validate } = require('../middleware/validate');
+const { z } = require('zod');
 const tagController = require('../controllers/tag.controller');
 
 // 所有路由都需要登录
@@ -13,7 +14,7 @@ router.get('/', tagController.list);
 router.post(
   '/',
   validate({
-    name: [required, isString, minLen(1), maxLen(50)],
+    name: z.string().min(1).max(50),
   }),
   tagController.create
 );
