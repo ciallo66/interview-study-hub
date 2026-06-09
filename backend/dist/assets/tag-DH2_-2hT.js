@@ -1,0 +1,1 @@
+import{n as e}from"./user-CyZo53AU.js";var t={async getList(){return(await e.get(`/tags`)).data},async create(t){return(await e.post(`/tags`,{name:t})).data},async remove(t){return(await e.delete(`/tags/${t}`)).data}};export{t};

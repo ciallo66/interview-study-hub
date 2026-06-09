@@ -134,3 +134,7 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# 强制允许 backend 下的 dist 文件夹上传
+!backend/dist/
+!backend/dist/**
