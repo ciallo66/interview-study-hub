@@ -4,7 +4,7 @@ import router from '../router';
 
 // 创建 axios 实例，统一管理接口前缀和超时时间。
 const http = axios.create({
-  baseURL: '/api',       // vite proxy 会转发到 localhost:3000
+  baseURL: 'https://my-project-production-0f79.up.railway.app/api',      
   timeout: 10000,
 });
 

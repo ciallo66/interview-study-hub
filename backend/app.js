@@ -6,7 +6,6 @@ const compression = require('compression');
 const authRoutes = require('./src/routes/auth.routes');
 const questionRoutes = require('./src/routes/question.routes');
 const tagRoutes = require('./src/routes/tag.routes');
-const errorHandler = require('./src/middleware/errorHandler');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,8 +14,6 @@ const PORT = process.env.PORT || 3000;
 app.use(compression());
 app.use(cors());
 app.use(express.json());
-
-
 
 // ---- 路由挂载 ----
 app.use('/api/auth', authRoutes);
