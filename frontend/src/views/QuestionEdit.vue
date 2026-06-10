@@ -71,16 +71,17 @@
 
           <div class="form-group">
             <label for="content">题目内容（Markdown）</label>
-            <div class="md-editor">
-              <textarea id="content" v-model="form.content" placeholder="支持 Markdown 语法" class="md-editor__textarea"></textarea>
-              <div class="md-editor__preview">
+                        <div class="md-editor" :class="{ 'md-editor--preview-hidden': !showPreview }">
+              <div class="md-editor__textarea-wrap">
+                <textarea id="content" v-model="form.content" placeholder="支持 Markdown 语法" class="md-editor__textarea"></textarea>
+                <button type="button" class="btn-toggle-preview-float" @click="showPreview = !showPreview" v-if="!showPreview">📖 显示预览</button>
+              </div>
+              <div class="md-editor__preview" v-show="showPreview">
                 <div class="md-editor__preview-header">
                   <span class="md-editor__preview-label">预览</span>
-                  <button type="button" class="btn-toggle-preview" @click="showPreview = !showPreview">
-                    {{ showPreview ? '隐藏' : '显示' }}
-                  </button>
+                  <button type="button" class="btn-toggle-preview" @click="showPreview = !showPreview">隐藏</button>
                 </div>
-                <div v-show="showPreview" class="md-editor__preview-content" v-html="renderedMarkdown"></div>
+                <div class="md-editor__preview-content" v-html="renderedMarkdown"></div>
               </div>
             </div>
           </div>
@@ -266,8 +267,12 @@ async function handleToggleMistake() {
 .btn-tag-add:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .md-editor { display: flex; gap: 16px; min-height: 400px; }
-.md-editor__textarea { flex: 1; padding: 14px; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 14px; font-family: 'Menlo','Consolas',monospace; line-height: 1.7; resize: vertical; min-height: 400px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+.md-editor--preview-hidden .md-editor__textarea-wrap { flex: 1; }
+.md-editor__textarea-wrap { flex: 1; position: relative; display: flex; }
+.md-editor__textarea { flex: 1; padding: 14px; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 15px; font-family: 'Menlo','Consolas',monospace; line-height: 1.7; resize: vertical; min-height: 400px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
 .md-editor__textarea:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.12); }
+.btn-toggle-preview-float { position: absolute; top: 10px; right: 10px; padding: 6px 14px; border: 1px solid #667eea; border-radius: 6px; background: #667eea; color: #fff; font-size: 13px; cursor: pointer; z-index: 1; transition: opacity 0.2s; }
+.btn-toggle-preview-float:hover { opacity: 0.85; }
 .md-editor__preview { flex: 1; border: 1px solid #e0e0e0; border-radius: 10px; background: #fafbfc; display: flex; flex-direction: column; overflow: hidden; }
 .md-editor__preview-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #eee; background: #fff; }
 .md-editor__preview-label { font-size: 12px; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -298,7 +303,8 @@ async function handleToggleMistake() {
 .back-link:hover { text-decoration: underline; }
 
 @media (max-width: 768px) {
-  .md-editor { flex-direction: column; min-height: auto; }
+    .md-editor { flex-direction: column; min-height: auto; }
+  .md-editor__textarea-wrap { min-height: 250px; }
   .md-editor__textarea { min-height: 250px; }
   .md-editor__preview { min-height: 250px; }
   .form-row { flex-direction: column; }

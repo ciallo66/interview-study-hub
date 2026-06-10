@@ -153,6 +153,7 @@ onMounted(() => {
 <style scoped>
 .detail-page {
   max-width: 800px;
+  margin: 0 auto;
 }
 
 .back-link {
@@ -220,7 +221,7 @@ onMounted(() => {
   border: 1px solid #eee;
   border-radius: 12px;
   padding: 28px;
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1.8;
   color: #333;
   margin-bottom: 24px;
