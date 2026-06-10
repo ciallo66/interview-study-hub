@@ -6,6 +6,7 @@ const compression = require('compression');
 const authRoutes = require('./src/routes/auth.routes');
 const questionRoutes = require('./src/routes/question.routes');
 const tagRoutes = require('./src/routes/tag.routes');
+const errorHandler = require('./src/middleware/errorHandler');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
