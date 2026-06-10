@@ -1,10 +1,11 @@
 -- 创建数据库
-CREATE DATABASE IF NOT EXISTS interview_kb
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
+-- CREATE DATABASE IF NOT EXISTS interview_kb
+--   CHARACTER SET utf8mb4
+--   COLLATE utf8mb4_unicode_ci;
 
-USE interview_kb;
+-- USE interview_kb;
 
+USE railway;
 -- 用户表
 CREATE TABLE users (
   id INT AUTO_INCREMENT PRIMARY KEY,

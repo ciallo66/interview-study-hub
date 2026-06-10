@@ -102,6 +102,7 @@ onMounted(async () => {
 
 <style scoped>
 .home {
+  font-size: 16px;
   /* 容器 */
 }
 
