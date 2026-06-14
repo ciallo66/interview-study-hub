@@ -11,8 +11,8 @@ const routes = [
   { path: '/random', name: 'Random', component: () => import('../views/Random.vue') },
 
   // ── 需登录 ──
-  { path: '/questions/new', name: 'QuestionNew', component: () => import('../views/QuestionEdit.vue'), meta: { requiresAuth: true } },
-  { path: '/questions/:id/edit', name: 'QuestionEdit', component: () => import('../views/QuestionEdit.vue'), meta: { requiresAuth: true } },
+  { path: '/questions/new', name: 'QuestionNew',component: () => import('../views/QuestionEdit.vue'), meta: { requiresAuth: true } },
+  { path: '/questions/:id/edit', name: 'QuestionEdit', component: () => import('../views/QuestionEdit.vue'), meta: { requiresAuth: true ,isAdmin:true} },
   { path: '/favorites', name: 'Favorites', component: () => import('../views/Favorites.vue'), meta: { requiresAuth: true } },
   { path: '/profile', name: 'Profile', component: () => import('../views/Profile.vue'), meta: { requiresAuth: true } },
 ];
@@ -24,6 +24,7 @@ const router = createRouter({
 
 
 router.beforeEach((to, from, next) => {
+  //每次切换页面读取一次本地token
   const token = localStorage.getItem('token');
 
   // 1.  定义公开白名单（游客随便看的页面路径）
@@ -42,10 +43,24 @@ router.beforeEach((to, from, next) => {
     return next(); // 游客访问公开页，直接放行！
   }
 
-  // 3. ── 剩下所有没在白名单里的（比如 /favorites, /profile），必须卡 Token ──
-  if (to.meta.requiresAuth && !token) {
-    next('/login');
+  // 3. 私人界面或管理员界面才可以通行
+  if (!token) {
+    // 没登录还想看私人页面或管理页面？做梦，直接踢去登录
+    return next('/login');
+  }
+
+  // 开始卡管理员权限
+  if (to.meta.isAdmin) {
+    const userRole = localStorage.getItem('user_role');
+    
+    if (userRole === 'admin') {
+      next(); // 是管理员，放行！
+    } else {
+      alert('你不是管理员，无权访问！');
+      next('/'); // 登录了但不是管理员，踢回首页
+    }
   } else {
+    // 已经登录，且去的是普通需要登录的页面（如 /favorites），直接放行
     next();
   }
 });

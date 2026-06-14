@@ -22,6 +22,7 @@ http.interceptors.request.use(
 
 // 响应拦截：统一处理接口错误；当 token 失效时，清理登录状态并跳回登录页。
 http.interceptors.response.use(
+  //解开第一层后端success包裹的data
   (res) => res.data,
   (err) => {
     const userStore = useUserStore();
@@ -38,11 +39,9 @@ http.interceptors.response.use(
 
 export default http;
 
-// 认证相关接口封装，供页面直接调用，避免在组件里重复写请求逻辑。
 //使用axios向后端发送请求和data数据
 export const authAPI = {
   register: (data) => http.post('/auth/register', data),
   login: (data) => http.post('/auth/login', data),
   getMe: () => http.get('/auth/me'),
-  user: () => http.get()
 };

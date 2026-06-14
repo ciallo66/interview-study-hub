@@ -4,6 +4,7 @@
  *   fail:      业务错误（参数、逻辑）
  *   error:     服务端错误
  */
+
 function success(data = null, message = 'ok') {
   return { code: 200, message, data };
 }

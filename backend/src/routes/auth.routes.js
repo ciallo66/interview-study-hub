@@ -9,7 +9,7 @@ const auth = require('../middleware/auth');
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 
-// 需要登录的接口（测试用）
+// 需要登录的接口
 router.get('/me', auth, authController.me);
 
 module.exports = router;
