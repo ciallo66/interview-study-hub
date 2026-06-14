@@ -24,7 +24,7 @@ export const useUserStore = defineStore('user', () => {
     //将数据存储到本地，使用JSON.stringify(),转换为字符串
     localStorage.setItem('token', nextToken);
     localStorage.setItem('user', JSON.stringify(nextUser));
-    localStorage.setItem('user_role', nextUser.role);
+    localStorage.setItem('role', nextUser.role);
   }
 
   // 是否已登录：依据 token 是否存在来判断。
@@ -36,13 +36,13 @@ export const useUserStore = defineStore('user', () => {
   // 登录接口：拿到 token 与用户信息后，写入本地状态。
   async function login(username, password) {
     const res = await authAPI.login({ username, password });
-    persistSession(res.data.token, { id: res.data.userId, username: res.data.username ,user_role:res.data.role});
+    persistSession(res.data.token, { id: res.data.userId, username: res.data.username, role: res.data.role });
   }
 
   // 注册接口：注册成功后同样写入登录状态。
   async function register(username, password) {
     const res = await authAPI.register({ username, password });
-    persistSession(res.data.token, { id: res.data.userId, username: res.data.username ,user_role:res.data.role});
+    persistSession(res.data.token, { id: res.data.userId, username: res.data.username, role: res.data.role });
   }
 
   // 清理本地登录状态，供 401 处理或退出登录时复用。
@@ -51,7 +51,7 @@ export const useUserStore = defineStore('user', () => {
     user.value = null;
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    localStorage.removeItem('user_role');
+    localStorage.removeItem('role');
     
   }
 

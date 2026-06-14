@@ -27,20 +27,12 @@ router.beforeEach((to, from, next) => {
   //每次切换页面读取一次本地token
   const token = localStorage.getItem('token');
 
-  // 1.  定义公开白名单（游客随便看的页面路径）
-  const whiteList = ['/', '/login', '/register', '/questions', '/random'];
-  
-  // 或者是根据动态匹配 id 的详情页 `/questions/6`
-  const isQuestionDetail = to.path.startsWith('/questions/');
-
-
-  // 2. 如果去的是公开页面，或者是帖子详情页 ──  直接无条件放行！
-  if (whiteList.includes(to.path) || isQuestionDetail) {
-    // 额外加一个：如果已经登录了，就别让去登录注册页了
+  // 公开页面（没有 requiresAuth 和 isAdmin）直接放行
+  if (!to.meta.requiresAuth && !to.meta.isAdmin) {
     if (to.meta.guest && token) {
       return next('/');
     }
-    return next(); // 游客访问公开页，直接放行！
+    return next();
   }
 
   // 3. 私人界面或管理员界面才可以通行
@@ -51,13 +43,14 @@ router.beforeEach((to, from, next) => {
 
   // 开始卡管理员权限
   if (to.meta.isAdmin) {
+   
     const userRole = localStorage.getItem('user_role');
     
     if (userRole === 'admin') {
       next(); // 是管理员，放行！
     } else {
       alert('你不是管理员，无权访问！');
-      next('/'); // 登录了但不是管理员，踢回首页
+      next(false); // 留在当前页面，不跳转
     }
   } else {
     // 已经登录，且去的是普通需要登录的页面（如 /favorites），直接放行
@@ -66,3 +59,4 @@ router.beforeEach((to, from, next) => {
 });
 
 export default router;
+
