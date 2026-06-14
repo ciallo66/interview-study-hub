@@ -22,27 +22,18 @@ const router = createRouter({
   routes,
 });
 
-/* router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token');
 
-  if (to.meta.requiresAuth && !token) {
-    next('/login');
-  } else if (to.meta.guest && token) {
-    next('/');
-  } else {
-    next();
-  }
-}); */
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token');
 
-  // 1. ✨ 定义公开白名单（游客随便看的页面路径）
+  // 1.  定义公开白名单（游客随便看的页面路径）
   const whiteList = ['/', '/login', '/register', '/questions', '/random'];
   
   // 或者是根据动态匹配 id 的详情页 `/questions/6`
   const isQuestionDetail = to.path.startsWith('/questions/');
 
-  // 2. 如果去的是公开页面，或者是帖子详情页 ── 🛑 直接无条件放行！
+
+  // 2. 如果去的是公开页面，或者是帖子详情页 ──  直接无条件放行！
   if (whiteList.includes(to.path) || isQuestionDetail) {
     // 额外加一个：如果已经登录了，就别让去登录注册页了
     if (to.meta.guest && token) {

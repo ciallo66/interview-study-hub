@@ -141,7 +141,7 @@ onMounted(loadQuestion);
 
 <style scoped>
 .detail-page {
-  max-width: 800px;
+  max-width: 100%;
   margin: 0 auto;
 }
 

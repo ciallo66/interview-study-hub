@@ -147,7 +147,7 @@ const Question = {
     };
   },
 
-    // 单个题目详情（含标签）
+  // 单个题目详情（含标签）
   async findById(id, userId) {
     const conditions = ['q.id = ?'];
     const params = [id];
