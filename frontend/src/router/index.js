@@ -44,7 +44,7 @@ router.beforeEach((to, from, next) => {
   // 开始卡管理员权限
   if (to.meta.isAdmin) {
    
-    const userRole = localStorage.getItem('user_role');
+    const userRole = localStorage.getItem('role');
     
     if (userRole === 'admin') {
       next(); // 是管理员，放行！
