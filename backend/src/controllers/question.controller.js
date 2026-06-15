@@ -71,17 +71,16 @@ const questionController = {
     res.json(success(null, '删除成功'));
   },
 
-  // PATCH /api/questions/:id/toggle-mistake
+    // PATCH /api/questions/:id/toggle-mistake
   async toggleMistake(req, res, next) {
-    const affected = await Question.toggleMistake(req.params.id, req.userId);
-    if (affected === 0) {
+    // 先确认题目存在
+    const exists = await Question.findById(req.params.id);
+    if (!exists) {
       return res.status(404).json(fail('题目不存在', 404));
     }
+    await Question.toggleMistake(req.params.id, req.userId);
     const question = await Question.findById(req.params.id, req.userId);
-    if (!question) {
-      return res.status(404).json(fail('题目不存在', 404));
-    }
-    res.json(success(question, question.is_mistake ? '已标记为错题' : '已取消错题标记'));
+    res.json(success(question, question.is_mistake ? '已收藏' : '已取消收藏'));
   },
 };
 

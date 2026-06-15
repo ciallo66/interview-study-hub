@@ -17,7 +17,7 @@ const TAG_SELECT = `
 
 const QUESTION_FIELDS = `
   q.id, q.user_id, q.title, q.content, q.difficulty,
-  q.source, q.is_mistake, q.mistake_count,
+  q.source, q.mistake_count,
   q.created_at, q.updated_at
 `;
 
@@ -25,13 +25,14 @@ const QUESTION_FIELDS = `
 // 辅助：构建 WHERE
 // ─────────────────────────────────────
 
-function buildWhereClause(userId, filters = {}) {
+function buildWhereClause(filters = {}) {
   const conditions = [];
   const params = [];
 
-  if (userId != null) {
+  // 只有明确传了 creatorId 时才按创建者过滤
+  if (filters.creatorId) {
     conditions.push('q.user_id = ?');
-    params.push(userId);
+    params.push(filters.creatorId);
   }
 
   if (filters.difficulty) {
@@ -39,7 +40,8 @@ function buildWhereClause(userId, filters = {}) {
     params.push(filters.difficulty);
   }
   if (filters.isMistake === 'true' || filters.isMistake === '1') {
-    conditions.push('q.is_mistake = TRUE');
+    // 当筛选收藏时，通过左连 user_favorites 来判断
+    conditions.push('uf.user_id IS NOT NULL');
   }
   if (filters.tagId) {
     conditions.push('EXISTS (SELECT 1 FROM question_tags qt2 WHERE qt2.question_id = q.id AND qt2.tag_id = ?)');
@@ -61,7 +63,8 @@ function buildWhereClause(userId, filters = {}) {
 function parseTags(row) {
   return {
     ...row,
-    is_mistake: Boolean(row.is_mistake),
+    // is_mistake 来自左连 user_favorites 的结果：有记录则为 true
+    is_mistake: Boolean(row.uf_user_id),
     tags: row.tag_ids
       ? row.tag_ids.split(',').map((id, i) => ({
           id: Number(id),
@@ -70,6 +73,7 @@ function parseTags(row) {
       : [],
     tag_ids: undefined,
     tag_names: undefined,
+    uf_user_id: undefined,
   };
 }
 
@@ -109,13 +113,19 @@ const Question = {
     }
   },
 
-  // 分页列表（含标签 + 筛选）
-  async findAll(userId, filters = {}) {
+    // 分页列表（含标签 + 筛选）
+  async findAll(currentUserId, filters = {}) {
     const page = Math.max(1, Number(filters.page) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(filters.pageSize) || 20));
     const offset = (page - 1) * pageSize;
 
-    const { whereClause, params } = buildWhereClause(userId, filters);
+    // 游客 currentUserId 为 null/undefined，此时收藏相关左连无意义但无害
+    const { whereClause, params } = buildWhereClause(filters);
+
+    // user_favorites 左连子句：如果当前用户已登录，左连该用户的收藏记录
+    const favJoin = currentUserId
+      ? `LEFT JOIN user_favorites uf ON uf.question_id = q.id AND uf.user_id = ${Number(currentUserId)}`
+      : '';
 
     // 计数
     const [countRows] = await pool.execute(
@@ -123,18 +133,22 @@ const Question = {
        FROM questions q
        LEFT JOIN question_tags qt ON q.id = qt.question_id
        LEFT JOIN tags t ON qt.tag_id = t.id
+       ${favJoin ? ` ${favJoin}` : ''}
        ${whereClause}`,
-             params
-           );
-           const total = countRows[0].total;
+      params
+    );
+    const total = countRows[0].total;
 
-           // 数据
-           const [rows] = await pool.execute(
-             `SELECT ${QUESTION_FIELDS}, ${TAG_SELECT}
-              FROM questions q
-              LEFT JOIN question_tags qt ON q.id = qt.question_id
-              LEFT JOIN tags t ON qt.tag_id = t.id
-              ${whereClause}
+    // 数据
+    const [rows] = await pool.execute(
+      `SELECT ${QUESTION_FIELDS},
+              IF(uf.user_id IS NOT NULL, uf.user_id, NULL) AS uf_user_id,
+              ${TAG_SELECT}
+       FROM questions q
+       LEFT JOIN question_tags qt ON q.id = qt.question_id
+       LEFT JOIN tags t ON qt.tag_id = t.id
+       ${favJoin ? ` ${favJoin}` : ''}
+       ${whereClause}
        GROUP BY q.id
        ORDER BY q.updated_at DESC
        LIMIT ? OFFSET ?`,
@@ -147,24 +161,23 @@ const Question = {
     };
   },
 
-  // 单个题目详情（含标签）
-  async findById(id, userId) {
-    const conditions = ['q.id = ?'];
-    const params = [id];
-
-    if (userId != null) {
-      conditions.push('q.user_id = ?');
-      params.push(userId);
-    }
+    // 单个题目详情（含标签 + 当前用户收藏状态）
+  async findById(id, currentUserId) {
+    const favJoin = currentUserId
+      ? `LEFT JOIN user_favorites uf ON uf.question_id = q.id AND uf.user_id = ${Number(currentUserId)}`
+      : '';
 
     const [rows] = await pool.execute(
-      `SELECT ${QUESTION_FIELDS}, ${TAG_SELECT}
+      `SELECT ${QUESTION_FIELDS},
+              IF(uf.user_id IS NOT NULL, uf.user_id, NULL) AS uf_user_id,
+              ${TAG_SELECT}
        FROM questions q
        LEFT JOIN question_tags qt ON q.id = qt.question_id
        LEFT JOIN tags t ON qt.tag_id = t.id
-       WHERE ${conditions.join(' AND ')}
+       ${favJoin ? ` ${favJoin}` : ''}
+       WHERE q.id = ?
        GROUP BY q.id`,
-      params
+      [id]
     );
     return rows.length > 0 ? parseTags(rows[0]) : null;
   },
@@ -213,16 +226,29 @@ const Question = {
     return result.affectedRows;
   },
 
-  // 切换错题标记
+    // 切换收藏（基于 user_favorites 关联表）
   async toggleMistake(id, userId) {
-    const [result] = await pool.execute(
-      `UPDATE questions
-       SET is_mistake = NOT is_mistake,
-           mistake_count = mistake_count + 1
-       WHERE id = ? AND user_id = ?`,
-      [id, userId]
+    // 先查是否已收藏
+    const [existing] = await pool.execute(
+      `SELECT 1 FROM user_favorites WHERE user_id = ? AND question_id = ?`,
+      [userId, id]
     );
-    return result.affectedRows;
+
+    if (existing.length > 0) {
+      // 已收藏 → 取消收藏
+      await pool.execute(
+        `DELETE FROM user_favorites WHERE user_id = ? AND question_id = ?`,
+        [userId, id]
+      );
+    } else {
+      // 未收藏 → 添加收藏
+      await pool.execute(
+        `INSERT INTO user_favorites (user_id, question_id) VALUES (?, ?)`,
+        [userId, id]
+      );
+    }
+
+    return 1; // 始终返回 1 表示操作成功（因为题目存在即可操作）
   },
 
   // 全文搜索（独立接口，其实也可以合并到 findAll）
