@@ -25,7 +25,7 @@ const QUESTION_FIELDS = `
 // 辅助：构建 WHERE
 // ─────────────────────────────────────
 
-function buildWhereClause(filters = {}) {
+function buildWhereClause(filters = {}, favJoin = '') {
   const conditions = [];
   const params = [];
 
@@ -40,7 +40,7 @@ function buildWhereClause(filters = {}) {
     params.push(filters.difficulty);
   }
   if (filters.isMistake === 'true' || filters.isMistake === '1') {
-    // 当筛选收藏时，通过左连 user_favorites 来判断
+    // 筛选收藏时，必须有 favJoin 才能引用 uf 表
     conditions.push('uf.user_id IS NOT NULL');
   }
   if (filters.tagId) {
@@ -113,28 +113,39 @@ const Question = {
     }
   },
 
-    // 分页列表（含标签 + 筛选）
+        // 分页列表（含标签 + 筛选）
   async findAll(currentUserId, filters = {}) {
     const page = Math.max(1, Number(filters.page) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(filters.pageSize) || 20));
     const offset = (page - 1) * pageSize;
 
-    // 游客 currentUserId 为 null/undefined，此时收藏相关左连无意义但无害
-    const { whereClause, params } = buildWhereClause(filters);
+            // 先构建 favJoin，因为 buildWhereClause 里的 isMistake 筛选需要用到 uf 表
+    // 注意：当 currentUserId 为 null（游客）时，即使传了 isMistake 也不会筛选到任何结果
+    const hasUser = !!currentUserId;
 
-    // user_favorites 左连子句：如果当前用户已登录，左连该用户的收藏记录
-    const favJoin = currentUserId
+    // 游客传 isMistake 筛选时，直接返回空结果
+    if (!hasUser && (filters.isMistake === 'true' || filters.isMistake === '1')) {
+      return { list: [], pagination: { page, pageSize, total: 0, totalPages: 0 } };
+    }
+
+    const favJoin = hasUser
       ? `LEFT JOIN user_favorites uf ON uf.question_id = q.id AND uf.user_id = ${Number(currentUserId)}`
       : '';
 
-    // 计数
-    const [countRows] = await pool.execute(
-      `SELECT COUNT(DISTINCT q.id) AS total
-       FROM questions q
+    const ufSelect = hasUser
+      ? 'IF(uf.user_id IS NOT NULL, uf.user_id, NULL) AS uf_user_id'
+      : 'NULL AS uf_user_id';
+
+    const { whereClause, params } = buildWhereClause(filters, favJoin);
+
+    const baseFrom = `FROM questions q
        LEFT JOIN question_tags qt ON q.id = qt.question_id
        LEFT JOIN tags t ON qt.tag_id = t.id
-       ${favJoin ? ` ${favJoin}` : ''}
-       ${whereClause}`,
+       ${favJoin}`;
+
+    // 计数
+    const [countRows] = await pool.execute(
+      `SELECT COUNT(DISTINCT q.id) AS total ${baseFrom} ${whereClause}`,
       params
     );
     const total = countRows[0].total;
@@ -142,12 +153,9 @@ const Question = {
     // 数据
     const [rows] = await pool.execute(
       `SELECT ${QUESTION_FIELDS},
-              IF(uf.user_id IS NOT NULL, uf.user_id, NULL) AS uf_user_id,
+              ${ufSelect},
               ${TAG_SELECT}
-       FROM questions q
-       LEFT JOIN question_tags qt ON q.id = qt.question_id
-       LEFT JOIN tags t ON qt.tag_id = t.id
-       ${favJoin ? ` ${favJoin}` : ''}
+       ${baseFrom}
        ${whereClause}
        GROUP BY q.id
        ORDER BY q.updated_at DESC
@@ -161,11 +169,23 @@ const Question = {
     };
   },
 
-    // 单个题目详情（含标签 + 当前用户收藏状态）
+        // 单个题目详情（含标签 + 当前用户收藏状态）
   async findById(id, currentUserId) {
-    const favJoin = currentUserId
-      ? `LEFT JOIN user_favorites uf ON uf.question_id = q.id AND uf.user_id = ${Number(currentUserId)}`
-      : '';
+    // 没传 currentUserId（游客）时，跳过左连，is_mistake 直接为 false
+    if (!currentUserId) {
+      const [rows] = await pool.execute(
+        `SELECT ${QUESTION_FIELDS},
+                NULL AS uf_user_id,
+                ${TAG_SELECT}
+         FROM questions q
+         LEFT JOIN question_tags qt ON q.id = qt.question_id
+         LEFT JOIN tags t ON qt.tag_id = t.id
+         WHERE q.id = ?
+         GROUP BY q.id`,
+        [id]
+      );
+      return rows.length > 0 ? parseTags(rows[0]) : null;
+    }
 
     const [rows] = await pool.execute(
       `SELECT ${QUESTION_FIELDS},
@@ -174,10 +194,10 @@ const Question = {
        FROM questions q
        LEFT JOIN question_tags qt ON q.id = qt.question_id
        LEFT JOIN tags t ON qt.tag_id = t.id
-       ${favJoin ? ` ${favJoin}` : ''}
+       LEFT JOIN user_favorites uf ON uf.question_id = q.id AND uf.user_id = ?
        WHERE q.id = ?
        GROUP BY q.id`,
-      [id]
+      [currentUserId, id]
     );
     return rows.length > 0 ? parseTags(rows[0]) : null;
   },
