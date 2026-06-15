@@ -1,13 +1,14 @@
 ﻿const router = require('express').Router();
 const auth = require('../middleware/auth');
+const { optionalAuth } = require('../middleware/auth');
 const { z } = require('zod');
 const { validate } = require('../middleware/validate');
 const questionController = require('../controllers/question.controller');
 
-// ── 公开路由（游客可访问）──
-router.get('/search', questionController.search);
-router.get('/', questionController.list);
-router.get('/:id', questionController.detail);
+// ── 公开路由（游客可访问，但如果有 token 也解析用户身份）──
+router.get('/search', optionalAuth, questionController.search);
+router.get('/', optionalAuth, questionController.list);
+router.get('/:id', optionalAuth, questionController.detail);
 
 // ── 以下需要登录 ──
 router.use(auth);
@@ -40,3 +41,4 @@ router.delete('/:id', questionController.remove);
 router.patch('/:id/toggle-mistake', questionController.toggleMistake);
 
 module.exports = router;
+
