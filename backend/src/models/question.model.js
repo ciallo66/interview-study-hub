@@ -133,7 +133,7 @@ const Question = {
       : '';
 
     const ufSelect = hasUser
-      ? 'IF(uf.user_id IS NOT NULL, uf.user_id, NULL) AS uf_user_id'
+      ? 'ANY_VALUE(uf.user_id) AS uf_user_id'
       : 'NULL AS uf_user_id';
 
     const { whereClause, params } = buildWhereClause(filters, favJoin);
@@ -189,7 +189,7 @@ const Question = {
 
     const [rows] = await pool.execute(
       `SELECT ${QUESTION_FIELDS},
-              IF(uf.user_id IS NOT NULL, uf.user_id, NULL) AS uf_user_id,
+              ANY_VALUE(uf.user_id) AS uf_user_id,
               ${TAG_SELECT}
        FROM questions q
        LEFT JOIN question_tags qt ON q.id = qt.question_id
