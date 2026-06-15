@@ -34,6 +34,12 @@
       <div class="auth-link">
         还没有账号？<router-link to="/register">立即注册</router-link>
       </div>
+
+      <div class="auth-hint">
+        体验账号 <br>
+        普通用户：user / 123456 <br>
+        管理员：admin / 123456
+      </div>
     </div>
   </div>
 </template>
@@ -67,3 +73,16 @@ async function handleLogin() {
   }
 }
 </script>
+
+<style>
+
+
+.auth-hint {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.6;
+}
+</style>
+
