@@ -50,11 +50,12 @@ const questionController = {
   async update(req, res, next) {
     const { title, content, difficulty, source, tagIds } = req.body;
     const affected = await Question.update(
-      req.params.id,
-      req.userId,
-      { title, content, difficulty, source },
-      tagIds || []
-    );
+          req.params.id,
+          req.userId,
+          req.userRole,
+          { title, content, difficulty, source },
+          tagIds || []
+        );
     if (affected === 0) {
       return res.status(404).json(fail('题目不存在或无权修改', 404));
     }
@@ -64,7 +65,7 @@ const questionController = {
 
   // DELETE /api/questions/:id
   async remove(req, res, next) {
-    const affected = await Question.delete(req.params.id, req.userId);
+    const affected = await Question.delete(req.params.id, req.userId, req.userRole);
     if (affected === 0) {
       return res.status(404).json(fail('题目不存在或无权删除', 404));
     }

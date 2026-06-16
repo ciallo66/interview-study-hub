@@ -203,17 +203,25 @@ const Question = {
   },
 
   // 更新题目 + 标签（事务）
-  async update(id, userId, { title, content, difficulty, source }, tagIds = []) {
+    async update(id, userId, userRole, { title, content, difficulty, source }, tagIds = []) {
     const conn = await pool.getConnection();
     try {
       await conn.beginTransaction();
 
-      const [result] = await conn.execute(
-        `UPDATE questions
-         SET title = ?, content = ?, difficulty = ?, source = ?
-         WHERE id = ? AND user_id = ?`,
-        [title, content || '', difficulty || 'medium', source || '', id, userId]
-      );
+      let sql, params;
+      if (userRole === 'admin') {
+        sql = `UPDATE questions
+               SET title = ?, content = ?, difficulty = ?, source = ?
+               WHERE id = ?`;
+        params = [title, content || '', difficulty || 'medium', source || '', id];
+      } else {
+        sql = `UPDATE questions
+               SET title = ?, content = ?, difficulty = ?, source = ?
+               WHERE id = ? AND user_id = ?`;
+        params = [title, content || '', difficulty || 'medium', source || '', id, userId];
+      }
+
+      const [result] = await conn.execute(sql, params);
 
       if (result.affectedRows === 0) {
         await conn.rollback();
@@ -238,11 +246,16 @@ const Question = {
   },
 
   // 删除题目
-  async delete(id, userId) {
-    const [result] = await pool.execute(
-      `DELETE FROM questions WHERE id = ? AND user_id = ?`,
-      [id, userId]
-    );
+    async delete(id, userId, userRole) {
+    let sql, params;
+    if (userRole === 'admin') {
+      sql = `DELETE FROM questions WHERE id = ?`;
+      params = [id];
+    } else {
+      sql = `DELETE FROM questions WHERE id = ? AND user_id = ?`;
+      params = [id, userId];
+    }
+    const [result] = await pool.execute(sql, params);
     return result.affectedRows;
   },
 

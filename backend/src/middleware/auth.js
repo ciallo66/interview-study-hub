@@ -13,8 +13,9 @@ function auth(req, res, next) {
   
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.userId = decoded.id;
-    next();
+        req.userId = decoded.id;
+        req.userRole = decoded.role || 'user';
+        next();
   } catch (err) {
     return res.status(401).json(fail('登录已过期，请重新登录', 401));
   }
@@ -30,9 +31,10 @@ function optionalAuth(req, res, next) {
 
   try {
     const decoded = jwt.verify(header.split(' ')[1], process.env.JWT_SECRET);
-    req.userId = decoded.id;
-  } catch (err) {
-    // token 无效，忽略，当游客处理
+        req.userId = decoded.id;
+        req.userRole = decoded.role || 'user';
+      } catch (err) {
+        // token 无效，忽略，当游客处理
   }
 
   next();
