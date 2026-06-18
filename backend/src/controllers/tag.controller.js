@@ -19,8 +19,12 @@ const tagController = {
     res.status(201).json(success({ id, name }, '标签创建成功'));
   },
 
-  // DELETE /api/tags/:id
+    // DELETE /api/tags/:id
   async remove(req, res, next) {
+    // 只有管理员才能删除标签
+    if (req.userRole !== 'admin') {
+      return res.status(403).json(fail('无权删除标签，仅管理员可操作', 403));
+    }
     const affected = await Tag.delete(req.params.id);
     if (affected === 0) {
       return res.status(404).json(fail('标签不存在', 404));
