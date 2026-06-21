@@ -43,7 +43,7 @@ router.beforeEach((to, from, next) => {
 
   // 开始卡管理员权限
   if (to.meta.isAdmin) {
-   
+    //获取本地的的role，用于判断权限
     const userRole = localStorage.getItem('role');
     
     if (userRole === 'admin') {

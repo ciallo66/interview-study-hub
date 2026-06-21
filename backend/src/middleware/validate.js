@@ -9,8 +9,9 @@
  *   validate({ tagIds: z.array(z.number()).optional() })
  *
  * @param {Object} schema - Zod 对象模式
- * @returns {Function} Express 中间件
+ * @returns {Function} Express 中间件 
  */
+
 function validate(schema) {
   // 自定义中文错误消息
   const customizedSchema = {};
@@ -21,7 +22,6 @@ function validate(schema) {
   }
 
   const zodSchema = z.object(customizedSchema);
-
   return (req, res, next) => {
     // 先做存在性检查
     for (const [field, rule] of Object.entries(schema)) {

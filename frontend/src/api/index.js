@@ -13,6 +13,7 @@ http.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
+      //通过Bearer方式添加请求头
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -26,7 +27,7 @@ http.interceptors.response.use(
   (res) => res.data,
   (err) => {
     const userStore = useUserStore();
-
+    //处理token过期
     if (err.response?.status === 401) {
       userStore.logout();
       router.push('/login');
