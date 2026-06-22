@@ -20,11 +20,11 @@ const User = {
     return rows[0] || null;
   },
 
-  // 创建用户
-  async create(username, passwordHash) {
+    // 创建用户
+  async create(username, passwordHash, role = 'user') {
     const [result] = await pool.execute(
-      'INSERT INTO users (username, password_hash) VALUES (?, ?)',
-      [username, passwordHash]
+      'INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)',
+      [username, passwordHash, role]
     );
     return result.insertId;
   },

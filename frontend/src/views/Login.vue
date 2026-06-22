@@ -58,13 +58,18 @@ const loading = ref(false);
 
 async function handleLogin() {
   errorMsg.value = '';
-  if (!form.username || !form.password) {
+  if (loading.value) return;
+
+  const username = form.username.trim();
+  const password = form.password.trim();
+
+  if (!username || !password) {
     errorMsg.value = '请输入用户名和密码';
     return;
   }
   loading.value = true;
   try {
-    await store.login(form.username, form.password);
+    await store.login(username, password);
     router.push('/questions');
   } catch (err) {
     errorMsg.value = err.message;

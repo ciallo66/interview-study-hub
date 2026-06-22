@@ -58,30 +58,37 @@ const store = useUserStore();
 
 const form = reactive({ username: '', password: '', confirmPassword: '' });
 const errorMsg = ref('');
+//使用loading来防止连续提交
 const loading = ref(false);
 
 async function handleRegister() {
   errorMsg.value = '';
-  if (!form.username || !form.password) {
+  if (loading.value) return;
+
+  const username = form.username.trim();
+  const password = form.password.trim();
+
+  if (!username || !password) {
     errorMsg.value = '请填写完整信息';
     return;
   }
-  if (form.password !== form.confirmPassword) {
+  if (password !== form.confirmPassword.trim()) {
     errorMsg.value = '两次密码不一致';
     return;
   }
-  if (form.password.length < 6) {
+  if (password.length < 6) {
     errorMsg.value = '密码至少6位';
     return;
   }
-  loading.value = true;
+
+  loading.value = true;    //在校验的时候上锁
   try {
-    await store.register(form.username, form.password);
+    await store.register(username, password);
     router.push('/questions');
   } catch (err) {
     errorMsg.value = err.message;
-  } finally {
-    loading.value = false;
-  }
+  } finally {             
+    loading.value = false;     //在后端返回数据的时候解锁
+  } 
 }
 </script>

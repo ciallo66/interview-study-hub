@@ -31,18 +31,19 @@ const authController = {
       return res.status(400).json(fail('用户名已存在'));
     }
 
-    // 加密密码并保存
+        // 加密密码并保存，新用户默认角色为 user
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-    const userId = await User.create(username, passwordHash);
+    const role = 'user';
+    const userId = await User.create(username, passwordHash, role);
 
     // 签发 token
     const token = jwt.sign(
-      { id: userId, username },
+      { id: userId, username, role },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
-    res.json(success({ token, userId, username }, '注册成功'));
+    res.json(success({ token, userId, username, role }, '注册成功'));
   },
 
   // 登录
