@@ -2,7 +2,7 @@ name: deploy backend
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   deploy:
@@ -15,8 +15,16 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
+          port: 22
+
           script: |
+            export NVM_DIR="$HOME/.nvm"
+            source "$NVM_DIR/nvm.sh"
+
             cd ~/interview-study-hub
+
             git pull origin main
+
             npm install
+
             pm2 restart interview-backend
