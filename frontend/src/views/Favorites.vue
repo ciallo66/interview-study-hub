@@ -50,47 +50,45 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import AppLayout from '../components/AppLayout.vue';
-import { questionAPI } from '../api/question';
-import { difficultyLabel } from '../utils/format';
+import { ref, onMounted } from 'vue'
+import AppLayout from '../components/AppLayout.vue'
+import { questionAPI } from '../api/question'
+import { difficultyLabel } from '../utils/format'
+import { useToast } from '../composables/useToast'
 
-const list = ref([]);
-const loading = ref(false);
-const errorMsg = ref('');
+const toast = useToast()
+const list = ref([])
+const loading = ref(false)
+const errorMsg = ref('')
 
 async function fetchList() {
-  loading.value = true;
-  errorMsg.value = '';
+  loading.value = true
+  errorMsg.value = ''
   try {
-    const data = await questionAPI.getList({ page: 1, pageSize: 100, isMistake: 'true' });
-    list.value = data.list || [];
+    const data = await questionAPI.getList({ page: 1, pageSize: 100, isMistake: 'true' })
+    list.value = data.list || []
   } catch (err) {
-    errorMsg.value = err.message || '加载失败';
+    errorMsg.value = err.message || '加载失败'
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 async function handleUnfavorite(id) {
   try {
-    await questionAPI.toggleMistake(id);
-    list.value = list.value.filter(q => q.id !== id);
+    await questionAPI.toggleMistake(id)
+    list.value = list.value.filter(q => q.id !== id)
+    toast.success('已取消收藏')
   } catch (err) {
-    alert(err.message || '操作失败');
+    toast.error(err.message || '操作失败')
   }
 }
 
-onMounted(fetchList);
+onMounted(fetchList)
 </script>
 
 <style scoped>
-.fav-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
+.fav-list { display: flex; flex-direction: column; gap: 10px; }
 .fav-item {
   display: flex;
   align-items: center;
@@ -98,7 +96,6 @@ onMounted(fetchList);
   flex-wrap: wrap;
   padding: 16px 20px;
 }
-
 .fav-item__main {
   display: flex;
   align-items: center;
@@ -106,26 +103,13 @@ onMounted(fetchList);
   flex: 1;
   min-width: 180px;
 }
-
 .fav-item__title {
   font-size: 15px;
   font-weight: 600;
   color: var(--color-text);
   text-decoration: none;
 }
-
-.fav-item__title:hover {
-  color: var(--color-primary);
-}
-
-.fav-item__source {
-  font-size: 12px;
-  color: var(--color-text-muted);
-}
-
-.fav-item__tags {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
+.fav-item__title:hover { color: var(--color-primary); }
+.fav-item__source { font-size: 12px; color: var(--color-text-muted); }
+.fav-item__tags { display: flex; gap: 4px; flex-wrap: wrap; }
 </style>

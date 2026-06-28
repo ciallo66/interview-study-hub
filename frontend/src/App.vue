@@ -1,7 +1,10 @@
 <template>
   <router-view />
+  <Toast />
+  <ConfirmDialog />
 </template>
 
 <script setup>
-// App 根组件，仅做路由出口
+import Toast from './components/Toast.vue'
+import ConfirmDialog from './components/ConfirmDialog.vue'
 </script>

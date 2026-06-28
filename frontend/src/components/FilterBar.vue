@@ -27,6 +27,7 @@
       </select>
 
       <button
+        v-if="store.isLoggedIn"
         type="button"
         :class="['toggle-btn', { active: isMistake }]"
         @click="toggleMistake"
@@ -38,47 +39,50 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
-import { tagAPI } from '../api/tag';
+import { ref, onMounted, watch } from 'vue'
+import { tagAPI } from '../api/tag'
+import { useUserStore } from '../stores/user'
+
+const store = useUserStore()
 
 const props = defineProps({
   initialKeyword: { type: String, default: '' },
   initialDifficulty: { type: String, default: '' },
   initialTagId: { type: [String, Number], default: '' },
-});
+})
 
-const emit = defineEmits(['filter-change']);
+const emit = defineEmits(['filter-change'])
 
-const keyword = ref(props.initialKeyword);
-const difficulty = ref(props.initialDifficulty);
-const tagId = ref(props.initialTagId ? String(props.initialTagId) : '');
-const isMistake = ref(false);
-const tags = ref([]);
+const keyword = ref(props.initialKeyword)
+const difficulty = ref(props.initialDifficulty)
+const tagId = ref(props.initialTagId ? String(props.initialTagId) : '')
+const isMistake = ref(false)
+const tags = ref([])
 
-let timer = null;
+let timer = null
 
 watch(
   () => [props.initialKeyword, props.initialDifficulty, props.initialTagId],
   ([kw, diff, tid]) => {
-    keyword.value = kw || '';
-    difficulty.value = diff || '';
-    tagId.value = tid ? String(tid) : '';
+    keyword.value = kw || ''
+    difficulty.value = diff || ''
+    tagId.value = tid ? String(tid) : ''
   }
-);
+)
 
 function onKeywordInput() {
-  clearTimeout(timer);
-  timer = setTimeout(emitChange, 300);
+  clearTimeout(timer)
+  timer = setTimeout(emitChange, 300)
 }
 
 function clearKeyword() {
-  keyword.value = '';
-  emitChange();
+  keyword.value = ''
+  emitChange()
 }
 
 function toggleMistake() {
-  isMistake.value = !isMistake.value;
-  emitChange();
+  isMistake.value = !isMistake.value
+  emitChange()
 }
 
 function emitChange() {
@@ -87,16 +91,16 @@ function emitChange() {
     difficulty: difficulty.value,
     tagId: tagId.value,
     isMistake: isMistake.value,
-  });
+  })
 }
 
 onMounted(async () => {
   try {
-    const data = await tagAPI.getList();
-    tags.value = data || [];
+    const data = await tagAPI.getList()
+    tags.value = data || []
   } catch (err) {
-    console.error('加载标签失败:', err);
-    tags.value = [];
+    console.error('加载标签失败:', err)
+    tags.value = []
   }
-});
+})
 </script>

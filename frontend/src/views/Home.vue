@@ -144,7 +144,7 @@ onMounted(async () => {
   text-align: center;
   padding: 48px 24px 36px;
   margin: -28px -24px 32px;
-  background: linear-gradient(180deg, #eef1fb 0%, var(--color-bg) 100%);
+  background: linear-gradient(180deg, var(--color-hero-bg) 0%, var(--color-bg) 100%);
   border-bottom: 1px solid var(--color-border);
 }
 
