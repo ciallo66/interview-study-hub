@@ -16,13 +16,14 @@ const questionController = {
 
   // GET /api/questions
   async list(req, res, next) {
-    const { page, pageSize, difficulty, tagId, isMistake } = req.query;
+        const { page, pageSize, difficulty, tagId, isMistake, creatorId } = req.query;
     const result = await Question.findAll(req.userId, {
       page,
       pageSize,
       difficulty,
       tagId,
       isMistake,
+      creatorId,
     });
     res.json(success(result));
   },

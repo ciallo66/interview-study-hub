@@ -134,21 +134,18 @@ import AppLayout from '../components/AppLayout.vue';
 import { useUserStore } from '../stores/user';
 import { authAPI } from '../api';
 import { questionAPI } from '../api/question';
-import { formatRelativeDate } from '../utils/format';
+
 
 const store = useUserStore();
 const loading = ref(false);
 const allQuestions = ref([]);
+const myQuestions = ref([]);
 const favorites = ref([]);
 const profile = ref({ username: '', id: '', status: '已登录' });
 
 const profileInitial = computed(() => (profile.value.username || store.username || 'U').charAt(0).toUpperCase());
 
-const recentUpdates = computed(() => {
-  return [...allQuestions.value]
-    .sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0))
-    .slice(0, 5);
-});
+
 
 const stats = computed(() => {
   const list = allQuestions.value;
@@ -170,13 +167,15 @@ const stats = computed(() => {
 onMounted(async () => {
   loading.value = true;
   try {
-    const [questionData, favoriteData, meData] = await Promise.all([
+        const [questionData, myQuestionData, favoriteData, meData] = await Promise.all([
       questionAPI.getList({ page: 1, pageSize: 500 }),
+      questionAPI.getList({ page: 1, pageSize: 500, creatorId: store.user?.id }),
       questionAPI.getList({ page: 1, pageSize: 100, isMistake: 'true' }),
       authAPI.getMe().catch(() => null),
     ]);
 
     allQuestions.value = questionData.list || [];
+    myQuestions.value = myQuestionData.list || [];
     favorites.value = favoriteData.list || [];
 
     const profilePayload = meData?.data ?? meData;
