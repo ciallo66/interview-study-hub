@@ -71,21 +71,21 @@
         <section class="profile-grid profile-grid--wide">
           <article class="surface-card">
             <div class="section-heading">
-              <h3>最近更新</h3>
-              <router-link to="/questions" class="section-link">查看题库</router-link>
+              <h3>我创建的题目</h3>
+              <router-link to="/questions/new" class="section-link">+ 新建</router-link>
             </div>
-            <div v-if="recentUpdates.length" class="mini-list">
+            <div v-if="myQuestions.length" class="mini-list">
               <router-link
-                v-for="item in recentUpdates.slice(0, 4)"
+                v-for="item in myQuestions.slice(0, 5)"
                 :key="item.id"
                 :to="'/questions/' + item.id"
                 class="mini-list__item"
               >
                 <span class="mini-list__title">{{ item.title }}</span>
-                <span class="mini-list__meta">{{ formatRelativeDate(item.updated_at) }}</span>
+                <span class="mini-list__meta">{{ item.difficulty === 'easy' ? '简单' : item.difficulty === 'medium' ? '中等' : '困难' }}</span>
               </router-link>
             </div>
-            <p v-else class="muted-text">暂无更新记录。</p>
+            <p v-else class="muted-text">还没有创建过题目，去添加第一道吧。</p>
           </article>
 
           <article class="surface-card">
