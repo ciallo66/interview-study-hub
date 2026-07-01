@@ -24,7 +24,6 @@ export const useUserStore = defineStore('user', () => {
     //将数据存储到本地，使用JSON.stringify(),转换为字符串
     localStorage.setItem('token', nextToken);
     localStorage.setItem('user', JSON.stringify(nextUser));
-    localStorage.setItem('role', nextUser.role);
   }
 
   // 是否已登录：依据 token 是否存在来判断。
@@ -51,7 +50,6 @@ export const useUserStore = defineStore('user', () => {
     user.value = null;
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    localStorage.removeItem('role');
     
   }
 
@@ -60,5 +58,16 @@ export const useUserStore = defineStore('user', () => {
     clearUserData();
   }
 
-  return { token, user, isLoggedIn, username, login, register, logout, clearUserData };
+  // 从 JWT token 解码角色
+  function getRole() {
+    const t = token.value || localStorage.getItem('token')
+    if (!t) return null
+    try {
+      return JSON.parse(atob(t.split('.')[1])).role || 'user'
+    } catch {
+      return null
+    }
+  }
+
+  return { token, user, isLoggedIn, username, login, register, logout, clearUserData, getRole };
 });

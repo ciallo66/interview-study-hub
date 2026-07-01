@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useToast } from '../composables/useToast'
+import { useUserStore } from '../stores/user'
+
 
 const routes = [
   { path: '/', name: 'Home', component: () => import('../views/Home.vue') },
@@ -34,7 +36,7 @@ router.beforeEach((to, from, next) => {
   }
 
   if (to.meta.isAdmin) {
-    const userRole = localStorage.getItem('role')
+    const userRole = useUserStore().getRole()
     if (userRole === 'admin') {
       next()
     } else {

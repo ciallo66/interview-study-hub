@@ -340,14 +340,16 @@ onMounted(async () => {
   background: var(--color-surface);
 }
 .tags-selected {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  display: block;
   margin-bottom: 10px;
   min-height: 28px;
-  max-height: 260px;
+  max-height: 180px;
   overflow-y: auto;
-  align-content: flex-start;
+  padding: 2px;
+}
+
+.tags-selected .tag--selected {
+  margin: 2px;
 }
 .tags-empty { font-size: 13px; color: var(--color-text-muted); }
 .tag--selected {
@@ -359,6 +361,7 @@ onMounted(async () => {
   padding: 4px 10px;
   border-radius: var(--radius-full);
   font-size: 12px;
+  margin: 3px;
 }
 .tag-remove {
   background: none;
