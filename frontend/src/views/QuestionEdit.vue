@@ -189,12 +189,26 @@ function removeTag(tag) {
 async function handleSubmit() {
   if (!validate()) return
   submitting.value = true
+
+  // 处理自定义新标签（id 为 null 的），先创建到后端拿到真实 id
+  const customTags = selectedTags.value.filter(t => t.id === null)
+  for (const tag of customTags) {
+    try {
+      const newTag = await tagAPI.create(tag.name)
+      tag.id = newTag.id
+    } catch (err) {
+      toast.error(`标签 "${tag.name}" 创建失败`)
+      submitting.value = false
+      return
+    }
+  }
+
   const payload = {
     title: form.title.trim(),
     difficulty: form.difficulty,
     source: form.source.trim(),
     content: form.content,
-    tagIds: selectedTags.value.map(t => t.id).filter(Boolean),
+    tagIds: selectedTags.value.map(t => t.id),
   }
 
   try {
@@ -314,6 +328,9 @@ onMounted(async () => {
   gap: 6px;
   margin-bottom: 10px;
   min-height: 28px;
+  max-height: 260px;
+  overflow-y: auto;
+  align-content: flex-start;
 }
 .tags-empty { font-size: 13px; color: var(--color-text-muted); }
 .tag--selected {

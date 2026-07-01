@@ -113,7 +113,7 @@ const Question = {
     }
   },
 
-        // 分页列表（含标签 + 筛选）
+  // 分页列表（含标签 + 筛选）
   async findAll(currentUserId, filters = {}) {
     const page = Math.max(1, Number(filters.page) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(filters.pageSize) || 20));
@@ -169,7 +169,7 @@ const Question = {
     };
   },
 
-        // 单个题目详情（含标签 + 当前用户收藏状态）
+  // 单个题目详情（含标签 + 当前用户收藏状态）
   async findById(id, currentUserId) {
     // 没传 currentUserId（游客）时，跳过左连，is_mistake 直接为 false
     if (!currentUserId) {
@@ -259,7 +259,7 @@ const Question = {
     return result.affectedRows;
   },
 
-    // 切换收藏（基于 user_favorites 关联表）
+  // 切换收藏（基于 user_favorites 关联表）
   async toggleMistake(id, userId) {
     // 先查是否已收藏
     const [existing] = await pool.execute(
