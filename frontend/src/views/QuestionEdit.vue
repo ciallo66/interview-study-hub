@@ -55,7 +55,7 @@
             <div class="tags-area">
               <div class="tags-selected">
                 <span v-if="selectedTags.length === 0" class="tags-empty">尚未选择标签</span>
-                <span v-for="tag in selectedTags" :key="tag.id" class="tag--selected">
+                <span v-for="tag in selectedTags" :key="tag._key" class="tag--selected">
                   {{ tag.name }}
                   <button type="button" class="tag-remove" @click="removeTag(tag)">✕</button>
                 </span>
@@ -170,14 +170,31 @@ function validate() {
 function clearFieldError(field) { fieldErrors[field] = '' }
 
 function addTag() {
+  // 从下拉框选已有标签
   const existing = allTags.value.find(t => t.id === Number(newTagId.value))
-  const name = newTagName.value.trim()
-
   if (existing && !selectedTags.value.some(s => s.id === existing.id)) {
-    selectedTags.value.push(existing)
+    selectedTags.value.push({ ...existing, _key: existing.id })
     newTagId.value = ''
-  } else if (name && !selectedTags.value.some(s => s.name === name)) {
-    selectedTags.value.push({ id: null, name })
+    return
+  }
+
+  // 手动输入标签名
+  const name = newTagName.value.trim()
+  if (!name) return
+
+  // 先查数据库是否已存在同名标签
+  const matched = allTags.value.find(t => t.name === name)
+  if (matched) {
+    if (!selectedTags.value.some(s => s.id === matched.id)) {
+      selectedTags.value.push({ ...matched, _key: matched.id })
+    }
+    newTagName.value = ''
+    return
+  }
+
+  // 数据库也没有，才是真正的新标签
+  if (!selectedTags.value.some(s => s.name === name)) {
+    selectedTags.value.push({ id: null, name, _key: Date.now() + Math.random() })
     newTagName.value = ''
   }
 }
@@ -267,7 +284,7 @@ onMounted(async () => {
       form.source = data.source || ''
       form.content = data.content || ''
       form.isMistake = data.is_mistake || false
-      selectedTags.value = data.tags || []
+      selectedTags.value = (data.tags || []).map(t => ({ ...t, _key: t.id }))
     } catch (err) {
       toast.error(err.message || '加载失败')
     } finally {
